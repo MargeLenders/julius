@@ -33,6 +33,8 @@ endif()
 if(${TARGET_PLATFORM} STREQUAL "ios")
 
     set(CMAKE_SYSTEM_NAME "iOS")
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "16.0" CACHE STRING "Minimum iOS deployment version" FORCE)
+    set(CMAKE_XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET "16.0")
 
     set(SYSTEM_LIBS OFF)
 
@@ -804,7 +806,7 @@ if(${TARGET_PLATFORM} STREQUAL "ios")
         XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY 1,2
         XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "com.github.bvschaik.julius"
     )
-    set(CMAKE_OSX_DEPLOYMENT_TARGET "14.0" CACHE STRING "Minimum OS X deployment version" FORCE)
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "16.0" CACHE STRING "Minimum OS X deployment version" FORCE)
     set_source_files_properties(${PROJECT_SOURCE_DIR}/res/ios/Assets.xcassets PROPERTIES
         MACOSX_PACKAGE_LOCATION Resources)
 endif()

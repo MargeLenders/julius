@@ -83,12 +83,14 @@ static void handler(int sig)
     exit_with_status(1);
 }
 
-#if defined(_WIN32) || defined(__vita__) || defined(__SWITCH__) || defined(__ANDROID__)
-/* Log to separate file on windows, since we don't have a console there */
+#if defined(_WIN32) || defined(__vita__) || defined(__SWITCH__) || defined(__ANDROID__) || defined(__IPHONEOS__)
+/* Log to separate file on platforms without standard console */
 static FILE *log_file = 0;
 
 static void write_log(void *userdata, int category, SDL_LogPriority priority, const char *message)
 {
+    fprintf(stderr, "[JULIUS] %s\n", message);
+    fflush(stderr);
     if (log_file) {
         if (priority == SDL_LOG_PRIORITY_ERROR) {
             fwrite("ERROR: ", sizeof(char), 7, log_file);
@@ -104,8 +106,15 @@ static void write_log(void *userdata, int category, SDL_LogPriority priority, co
 static void setup_logging(void)
 {
     // On some platforms (vita, android), not removing the file will not empty it when reopening for writing
+#ifdef __IPHONEOS__
+    char log_path[512];
+    snprintf(log_path, sizeof(log_path), "%s/julius-log.txt", ios_get_base_path());
+    remove(log_path);
+    log_file = fopen(log_path, "wt");
+#else
     file_remove("julius-log.txt");
     log_file = file_open("julius-log.txt", "wt");
+#endif
     SDL_LogSetOutputFunction(write_log, NULL);
 }
 
@@ -413,6 +422,9 @@ static int init_sdl(void)
     SDL_SetHint(SDL_HINT_ACCELEROMETER_AS_JOYSTICK, "0");
 #endif
 
+    // Force landscape orientations on mobile platforms
+    SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeLeft LandscapeRight");
+
     if (SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) != 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Could not initialize SDL: %s", SDL_GetError());
         return 0;
@@ -515,7 +527,7 @@ static int pre_init(const char *custom_data_dir)
 #if SDL_VERSION_ATLEAST(2, 0, 1)
     if (platform_sdl_version_at_least(2, 0, 1)) {
 #ifdef __IPHONEOS__
-        char *base_path = ios_get_base_path();
+        const char *base_path = ios_get_base_path();
 #else
         char *base_path = SDL_GetBasePath();
 #endif

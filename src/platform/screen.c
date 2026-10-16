@@ -9,6 +9,7 @@
 #include "input/cursor.h"
 #include "platform/android/android.h"
 #include "platform/cursor.h"
+#include "platform/ios/ios.h"
 #include "platform/switch/switch.h"
 #include "platform/vita/vita.h"
 
@@ -111,6 +112,13 @@ int platform_screen_create(const char *title, int display_scale_percentage, int 
         SDL_GetDesktopDisplayMode(0, &mode);
         width = mode.w;
         height = mode.h;
+#ifdef __IPHONEOS__
+        if (width < height) {
+            int temp = width;
+            width = height;
+            height = temp;
+        }
+#endif
     } else {
         setting_window(&width, &height);
         width = scale_logical_to_pixels(width);
@@ -150,8 +158,20 @@ int platform_screen_create(const char *title, int display_scale_percentage, int 
         return 0;
     }
 
+#ifdef __IPHONEOS__
+    ios_attach_window_to_scene(SDL.window);
+#endif
+
     if (system_is_fullscreen_only()) {
         SDL_GetWindowSize(SDL.window, &width, &height);
+#ifdef __IPHONEOS__
+        if (width < height) {
+            int temp = width;
+            width = height;
+            height = temp;
+            SDL_SetWindowSize(SDL.window, width, height);
+        }
+#endif
     }
 
     SDL_Log("Creating renderer");
@@ -196,6 +216,13 @@ void platform_screen_destroy(void)
 
 int platform_screen_resize(int pixel_width, int pixel_height)
 {
+#ifdef __IPHONEOS__
+    if (pixel_width < pixel_height) {
+        int temp = pixel_width;
+        pixel_width = pixel_height;
+        pixel_height = temp;
+    }
+#endif
     apply_max_scale(pixel_width, pixel_height);
 
     int logical_width = scale_pixels_to_logical(pixel_width);
@@ -229,6 +256,13 @@ int system_scale_display(int display_scale_percentage)
 {
     int width, height;
     SDL_GetWindowSize(SDL.window, &width, &height);
+#ifdef __IPHONEOS__
+    if (width < height) {
+        int temp = width;
+        width = height;
+        height = temp;
+    }
+#endif
     set_scale_percentage(display_scale_percentage, width, height);
     platform_screen_resize(width, height);
     return scale.percentage;
@@ -236,13 +270,20 @@ int system_scale_display(int display_scale_percentage)
 
 int system_can_scale_display(int *min_scale, int *max_scale)
 {
-#ifndef __ANDROID__
+#if !defined(__ANDROID__) && !defined(__IPHONEOS__)
     if (system_is_fullscreen_only()) {
         return 0;
     }
 #endif
     int width, height;
     SDL_GetWindowSize(SDL.window, &width, &height);
+#ifdef __IPHONEOS__
+    if (width < height) {
+        int temp = width;
+        width = height;
+        height = temp;
+    }
+#endif
 #ifdef __ANDROID__
     int max_scale_current_orientation = get_max_scale_percentage(width, height);
     int max_scale_alternative_orientation = get_max_scale_percentage(height, width);
@@ -436,7 +477,7 @@ void system_set_mouse_position(int *x, int *y)
 
 int system_is_fullscreen_only(void)
 {
-#if defined(__ANDROID__) || defined(__SWITCH__) || defined(__vita__)
+#if defined(__ANDROID__) || defined(__SWITCH__) || defined(__vita__) || defined(__IPHONEOS__)
     return 1;
 #else
     return 0;
