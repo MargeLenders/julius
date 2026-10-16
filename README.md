@@ -32,6 +32,7 @@ Supported platforms:
 - Windows
 - Linux AppImage
 - MacOS
+- iOS / iPadOS
 - PS Vita
 - Nintendo Switch
 - Android
