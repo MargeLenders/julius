@@ -57,6 +57,13 @@ if(${TARGET_PLATFORM} STREQUAL "ios")
 
     # Support iPhone (1) and iPad (2) Destinations
     set(CMAKE_XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "1,2")
+
+    # Suppress libtool "has no symbols" warning for object files with no exported symbols
+    set(CMAKE_XCODE_ATTRIBUTE_OTHER_LIBTOOLFLAGS "-no_warning_for_no_symbols")
+    set(CMAKE_STATIC_LINKER_FLAGS "-no_warning_for_no_symbols")
+
+    # Use -fno-common to prevent ld section __DATA,__common alignment reduction warnings, and suppress harmless 64-to-32 truncation in bundled libs
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-common -Wno-deprecated-declarations -Wno-shorten-64-to-32")
 endif()
 
 
@@ -199,6 +206,10 @@ set(ZLIB_FILES
     ext/zlib/deflate.c
     ext/zlib/trees.c
     ext/zlib/zutil.c
+)
+set_source_files_properties(
+    ${ZLIB_FILES}
+    PROPERTIES COMPILE_FLAGS "-Wno-shorten-64-to-32"
 )
 
 set(PLATFORM_FILES

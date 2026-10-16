@@ -134,7 +134,7 @@ extern z_const char * const z_errmsg[10];
 #  define OS_CODE 18
 #endif
 
-#ifdef __APPLE__
+#if defined(__APPLE__) && !defined(OS_CODE)
 #  define OS_CODE 19
 #endif
 

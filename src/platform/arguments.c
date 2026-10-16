@@ -109,7 +109,7 @@ int platform_parse_arguments(int argc, char **argv, julius_args *output_args)
             }
         } else if (SDL_strcmp(argv[i], "--display") == 0) {
             if (i + 1 < argc) {
-                output_args->display_id = SDL_strtol(argv[i + 1], 0, 10);
+                output_args->display_id = (int) SDL_strtol(argv[i + 1], 0, 10);
                 i++;
             } else {
                 print_log(DISPLAY_ID_ERROR_MESSAGE);
