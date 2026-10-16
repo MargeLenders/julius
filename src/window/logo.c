@@ -17,10 +17,8 @@ static void init(void)
 
 static void draw_background(void)
 {
-    graphics_clear_screen();
-
+    image_draw_fullscreen_cover(image_group(GROUP_LOGO));
     graphics_in_dialog();
-    image_draw(image_group(GROUP_LOGO), 0, 0);
     lang_text_draw_centered_colored(13, 7, 160, 462, 320, FONT_NORMAL_PLAIN, COLOR_WHITE);
     graphics_reset_dialog();
 }

@@ -39,7 +39,11 @@ static int values[CONFIG_MAX_ENTRIES];
 static char string_values[CONFIG_STRING_MAX_ENTRIES][CONFIG_STRING_VALUE_MAX];
 
 static int default_values[CONFIG_MAX_ENTRIES] = {
+#ifdef __IPHONEOS__
+    [CONFIG_SCREEN_DISPLAY_SCALE] = 150,
+#else
     [CONFIG_SCREEN_DISPLAY_SCALE] = 100,
+#endif
     [CONFIG_SCREEN_CURSOR_SCALE] = 100
 };
 static const char default_string_values[CONFIG_STRING_MAX_ENTRIES][CONFIG_STRING_VALUE_MAX];

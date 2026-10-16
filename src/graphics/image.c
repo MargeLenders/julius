@@ -4,6 +4,7 @@
 #include "graphics/graphics.h"
 #include "graphics/screen.h"
 
+#include <stdlib.h>
 #include <string.h>
 
 #define FOOTPRINT_WIDTH 58
@@ -695,14 +696,89 @@ void image_draw_letter(font_t font, int letter_id, int x, int y, color_t color)
     }
 }
 
+void image_draw_fullscreen_cover(int image_id)
+{
+    const image *img = image_get(image_id);
+    const color_t *src_data = image_data(image_id);
+    if (!img || !src_data) {
+        return;
+    }
+
+    int s_w = screen_width();
+    int s_h = screen_height();
+    if (s_w <= 0 || s_h <= 0 || img->width <= 0 || img->height <= 0) {
+        return;
+    }
+
+    if (img->draw.is_fully_compressed) {
+        graphics_clear_screen();
+        image_draw(image_id, (s_w - img->width) / 2, (s_h - img->height) / 2);
+        return;
+    }
+
+    graphics_reset_dialog();
+
+    // Determine scale to cover (aspect-fill) the canvas completely:
+    int scaled_w, scaled_h;
+    if ((int64_t) s_w * img->height >= (int64_t) s_h * img->width) {
+        scaled_w = s_w;
+        scaled_h = (int) (((int64_t) s_w * img->height) / img->width);
+    } else {
+        scaled_h = s_h;
+        scaled_w = (int) (((int64_t) s_h * img->width) / img->height);
+    }
+
+    if (scaled_w <= 0 || scaled_h <= 0) {
+        return;
+    }
+
+    int offset_x = (s_w - scaled_w) / 2;
+    int offset_y = (s_h - scaled_h) / 2;
+
+    int src_x_table[4096];
+    int *x_map = src_x_table;
+    int allocated = 0;
+    if (s_w > 4096) {
+        x_map = malloc(s_w * sizeof(int));
+        allocated = 1;
+    }
+
+    for (int dst_x = 0; dst_x < s_w; dst_x++) {
+        int64_t num = (int64_t) (dst_x - offset_x) * img->width;
+        int sx = (int) (num / scaled_w);
+        if (sx < 0) {
+            sx = 0;
+        } else if (sx >= img->width) {
+            sx = img->width - 1;
+        }
+        x_map[dst_x] = sx;
+    }
+
+    for (int dst_y = 0; dst_y < s_h; dst_y++) {
+        int64_t num = (int64_t) (dst_y - offset_y) * img->height;
+        int sy = (int) (num / scaled_h);
+        if (sy < 0) {
+            sy = 0;
+        } else if (sy >= img->height) {
+            sy = img->height - 1;
+        }
+
+        const color_t *src_row = &src_data[sy * img->width];
+        color_t *dst_row = graphics_get_pixel(0, dst_y);
+
+        for (int dst_x = 0; dst_x < s_w; dst_x++) {
+            dst_row[dst_x] = src_row[x_map[dst_x]];
+        }
+    }
+
+    if (allocated) {
+        free(x_map);
+    }
+}
+
 void image_draw_fullscreen_background(int image_id)
 {
-    int s_width = screen_width();
-    int s_height = screen_height();
-    if (s_width > 1024 || s_height > 768) {
-        graphics_clear_screen();
-    }
-    image_draw(image_id, (s_width - 1024) / 2, (s_height - 768) / 2);
+    image_draw_fullscreen_cover(image_id);
 }
 
 void image_draw_isometric_footprint(int image_id, int x, int y, color_t color_mask)

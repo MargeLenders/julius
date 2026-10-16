@@ -90,27 +90,25 @@ static void init(intermezzo_type type, void (*callback)(void))
 
 static void draw_background(void)
 {
-    graphics_clear_screen();
-    int x_offset = (screen_width() - 1024) / 2;
-    int y_offset = (screen_height() - 768) / 2;
-
     int mission = scenario_campaign_mission();
     int image_base = image_group(GROUP_INTERMEZZO_BACKGROUND);
+    int img_id = image_base;
     if (data.type == INTERMEZZO_MISSION_BRIEFING) {
         if (scenario_is_custom()) {
-            image_draw(image_base + 1, x_offset, y_offset);
+            img_id = image_base + 1;
         } else {
-            image_draw(image_base + 1 + 2 * mission, x_offset, y_offset);
+            img_id = image_base + 1 + 2 * mission;
         }
     } else if (data.type == INTERMEZZO_FIRED) {
-        image_draw(image_base, x_offset, y_offset);
+        img_id = image_base;
     } else if (data.type == INTERMEZZO_WON) {
         if (scenario_is_custom()) {
-            image_draw(image_base + 2, x_offset, y_offset);
+            img_id = image_base + 2;
         } else {
-            image_draw(image_base + 2 + 2 * mission, x_offset, y_offset);
+            img_id = image_base + 2 + 2 * mission;
         }
     }
+    image_draw_fullscreen_cover(img_id);
 }
 
 static void handle_input(const mouse *m, const hotkeys *h)
